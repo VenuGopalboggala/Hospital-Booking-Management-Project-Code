@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Appointment Booking</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <!-- Ionicons for UI icons -->
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color:white;
+        }
+        .main-title {
+            font-family: 'Poppins', sans-serif;
+        }
+        .card {
+            background-color: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease;
+        }
+        .form-input-container {
+            position: relative;
+        }
+        .form-input {
+            width: 100%;
+            padding: 12px 14px 12px 44px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            background-color: #f7fafc;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #14b8a6;
+            box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.2);
+            background-color: white;
+        }
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 20px;
+        }
+        .btn {
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background-color: #0d9488;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(13, 148, 136, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .btn-primary:hover {
+            background-color: #0f766e;
+            box-shadow: 0 10px 15px -3px rgba(13, 148, 136, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-success {
+            background-color: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        .btn-secondary {
+            background-color: #e2e8f0;
+            color: #475569;
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+        }
+        .btn-danger-outline {
+            background-color: #fff1f2;
+            color: #f43f5e;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #ffe4e6;
+        }
+        .btn-danger-outline:hover {
+            background-color: #fee2e2;
+            color: #e11d48;
+        }
+        
+        #booking-folder-header { cursor: pointer; padding: 1.5rem; border-radius: 16px; background: linear-gradient(135deg, #14b8a6, #0d9488); color: white; transition: all 0.3s ease; }
+        #booking-folder-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out; padding: 0 1.5rem; }
+        #booking-folder.open #booking-folder-content { max-height: 500px; padding: 1.5rem; padding-top: 1rem; }
+        #folder-icon { transition: transform 0.4s ease; }
+        #booking-folder.open #folder-icon { transform: rotate(90deg); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 50; transition: opacity 0.3s ease; }
+        .modal-container { background-color: white; border-radius: 16px; padding: 2rem; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s ease; }
+        .modal-overlay:not(.hidden) .modal-container { transform: scale(1); }
+        .tab-button { padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; }
+        .tab-button.active { background-color: #14b8a6; color: white; }
+        .tab-button:not(.active) { background-color: #f1f5f9; color: #475569; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+
+    <!-- Authentication Container -->
+    <div id="auth-container" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md">
+            <div class="text-center mb-8">
+                <ion-icon name="pulse" class="text-6xl text-teal-600"></ion-icon>
+                <h1 class="text-4xl font-bold text-gray-800 main-title mt-2">Appointment Hub</h1>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="login-form-container" class="card p-8">
+                <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
+                <form id="login-form" class="space-y-4">
+                    <div>
+                        <label for="login-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="login-email" class="w-full p-3 border rounded-lg" required>
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="login-password" class="w-full p-3 border rounded-lg" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full !mt-6">Login</button>
+                </form>
+                <p class="text-center text-sm text-gray-600 mt-6">
+                    Don't have an account? <a href="#" id="show-signup" class="font-semibold text-teal-600 hover:underline">Sign Up</a>
+                </p>
+            </div>
+
+            <!-- Sign-Up Form -->
+            <div id="signup-form-container" class="card p-8 hidden">
+                <h2 class="text-2xl font-bold text-center mb-6">Create Account</h2>
+                <form id="signup-form" class="space-y-4">
+                    <div id="doctor-name-field" class="hidden">
+                        <label for="signup-name" class="block text-sm font-medium text-gray-700 mb-1">Select Your Profile</label>
+                        <select id="signup-name" class="w-full p-3 border rounded-lg">
+                            <option value="" disabled selected>Choose your doctor profile</option>
+                            <option value="Dr. Emily Carter (Cardiologist)">Dr. Emily Carter (Cardiologist)</option>
+                            <option value="Dr. Ben Hanna (Dermatologist)">Dr. Ben Hanna (Dermatologist)</option>
+                            <option value="Dr. Olivia Chen (Pediatrician)">Dr. Olivia Chen (Pediatrician)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="signup-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                        <input type="email" id="signup-email" class="w-full p-3 border rounded-lg" required>
+                    </div>
+                    <div>
+                        <label for="signup-password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                        <input type="password" id="signup-password" class="w-full p-3 border rounded-lg" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">I am a...</label>
+                        <div class="flex gap-4" id="role-selection">
+                            <label class="flex-1 p-3 border rounded-lg flex items-center gap-2 cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-500">
+                                <input type="radio" name="role" value="patient" class="accent-teal-600" checked> Patient
+                            </label>
+                            <label class="flex-1 p-3 border rounded-lg flex items-center gap-2 cursor-pointer has-[:checked]:bg-teal-50 has-[:checked]:border-teal-500">
+                                <input type="radio" name="role" value="doctor" class="accent-teal-600"> Doctor
+                            </label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full !mt-6">Sign Up</button>
+                </form>
+                <p class="text-center text-sm text-gray-600 mt-6">
+                    Already have an account? <a href="#" id="show-login" class="font-semibold text-teal-600 hover:underline">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App Container (Initially Hidden) -->
+    <div id="app-container" class="hidden">
+        <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+            <!-- Header -->
+            <div class="text-center mb-10">
+                <div class="flex justify-center items-center gap-3">
+                    <ion-icon name="pulse" class="text-4xl text-teal-600"></ion-icon>
+                    <h1 class="text-4xl md:text-5xl font-bold text-gray-800 main-title">Appointment Hub</h1>
+                </div>
+                <p id="welcome-message" class="text-gray-600 mt-3 text-lg"></p>
+                <div class="mt-4 flex justify-center items-center gap-4">
+                    <button id="profile-btn" class="btn btn-secondary !p-2 !rounded-full">
+                        <ion-icon name="person-circle-outline" class="text-2xl"></ion-icon>
+                    </button>
+                    <button id="signout-btn" class="btn btn-danger-outline !py-2 !px-4">
+                        <ion-icon name="log-out-outline"></ion-icon> Sign Out
+                    </button>
+                </div>
+            </div>
+
+            <!-- Patient Dashboard -->
+            <div id="patient-dashboard" class="hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="space-y-8">
+                         <div id="booking-folder" class="card overflow-hidden">
+                            <div id="booking-folder-header" class="flex justify-between items-center">
+                                <h2 class="text-2xl font-bold">Book a New Appointment</h2>
+                                <ion-icon id="folder-icon" name="chevron-forward-outline" class="text-3xl"></ion-icon>
+                            </div>
+                            <div id="booking-folder-content">
+                                <form id="booking-form" class="space-y-5">
+                                    <div>
+                                        <label for="patient-name" class="block text-sm font-medium text-gray-700 mb-2">Patient Name</label>
+                                        <div class="form-input-container"><ion-icon name="person-outline" class="input-icon"></ion-icon><input type="text" id="patient-name" class="form-input" placeholder="e.g., John Doe" required></div>
+                                    </div>
+                                    <div>
+                                        <label for="doctor" class="block text-sm font-medium text-gray-700 mb-2">Select Doctor</label>
+                                         <div class="form-input-container"><ion-icon name="medkit-outline" class="input-icon"></ion-icon><select id="doctor" class="form-input" required><option value="" disabled selected>Choose a doctor</option><option value="Dr. Emily Carter (Cardiologist)">Dr. Emily Carter (Cardiologist)</option><option value="Dr. Ben Hanna (Dermatologist)">Dr. Ben Hanna (Dermatologist)</option><option value="Dr. Olivia Chen (Pediatrician)">Dr. Olivia Chen (Pediatrician)</option></select></div>
+                                    </div>
+                                    <div>
+                                        <label for="appointment-date" class="block text-sm font-medium text-gray-700 mb-2">Appointment Date</label>
+                                        <div class="form-input-container"><ion-icon name="calendar-outline" class="input-icon"></ion-icon><input type="date" id="appointment-date" class="form-input" required></div>
+                                    </div>
+                                    <div>
+                                        <label for="appointment-time" class="block text-sm font-medium text-gray-700 mb-2">Appointment Time</label>
+                                        <div class="form-input-container"><ion-icon name="time-outline" class="input-icon"></ion-icon><select id="appointment-time" class="form-input" required><option value="" disabled selected>Choose a time slot</option><option value="09:00 AM">09:00 AM</option><option value="10:00 AM">10:00 AM</option><option value="11:00 AM">11:00 AM</option><option value="02:00 PM">02:00 PM</option><option value="03:00 PM">03:00 PM</option></select></div>
+                                    </div>
+                                    <button type="submit" id="submit-btn" class="btn btn-primary w-full !mt-8"><ion-icon name="add-circle-outline"></ion-icon>Book Appointment</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="card p-6">
+                            <h2 class="text-2xl font-bold mb-4 text-gray-800">Doctor's Availability</h2>
+                            <div id="doctor-availability-list" class="space-y-4"></div>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 card p-6 md:p-8">
+                        <h2 class="text-2xl font-bold mb-6 text-gray-800">Your Upcoming Appointments</h2>
+                        <div id="appointments-list" class="space-y-4"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Doctor Dashboard -->
+            <div id="doctor-dashboard" class="hidden">
+                 <div class="card p-8">
+                    <h2 class="text-2xl font-bold mb-6">Your Scheduled Appointments</h2>
+                    <div id="doctor-appointments-list" class="space-y-4">
+                        <!-- Doctor's appointments will be rendered here -->
+                    </div>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal-container">
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold">My Profile</h2><button id="close-profile-modal-btn" class="text-gray-500 hover:text-gray-800"><ion-icon name="close-circle-outline" class="text-3xl"></ion-icon></button></div>
+            <div class="flex border-b mb-6"><button id="details-tab" class="tab-button active" data-tab="details">Personal Details</button><button id="history-tab" class="tab-button" data-tab="history">Booking History</button></div>
+            <div>
+                <div id="details-content" class="tab-content active">
+                    <form id="profile-form" class="space-y-4">
+                        <div><label for="profile-name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label><input type="text" id="profile-name" class="form-input bg-gray-200" readonly></div>
+                        <div><label for="profile-email" class="block text-sm font-medium text-gray-700 mb-1">Email Address</label><input type="email" id="profile-email" class="form-input bg-gray-200" readonly></div>
+                        <div><label for="profile-phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label><input type="tel" id="profile-phone" class="form-input" placeholder="+1 (555) 123-4567"></div>
+                        <div class="pt-4 flex justify-end"><button type="submit" class="btn btn-primary">Save Changes</button></div>
+                    </form>
+                </div>
+                <div id="history-content" class="tab-content space-y-3"></div>
+            </div>
+        </div>
+    </div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
